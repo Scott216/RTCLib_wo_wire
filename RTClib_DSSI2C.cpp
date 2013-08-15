@@ -139,16 +139,16 @@ uint8_t RTC_DS1307::isrunning(void) {
 }
 
 void RTC_DS1307::adjust(const DateTime& dt) {
-
-    I2c.write(DS1307_ADDRESS, REG_ZERO);
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.second()));    // why does 2nd parameter have to be an int. Isn't uint8_t okay.
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.minute()));
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.hour()));
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(0));
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.day()));
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.month()));
-    I2c.write(DS1307_ADDRESS, (int) bin2bcd(dt.year() - 2000));
-    I2c.write(DS1307_ADDRESS, REG_ZERO);
+  uint8_t ary[8]; // array to hold data so it can be sent all at once by I2c.write()
+  ary[0] = bin2bcd(dt.second()); 
+  ary[1] = bin2bcd(dt.minute());
+  ary[2] = bin2bcd(dt.hour());
+  ary[3] = bin2bcd(0);
+  ary[4] = bin2bcd(dt.day());
+  ary[5] = bin2bcd(dt.month());
+  ary[6] = bin2bcd(dt.year() - 2000);
+  ary[7] = REG_ZERO;
+  I2c.write(DS1307_ADDRESS, REG_ZERO, ary, 8);
 }
 
 DateTime RTC_DS1307::now() {
