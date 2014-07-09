@@ -32,7 +32,7 @@ void setup()
 
     // following line sets the RTC to the date & time this sketch was compiled
     // sample input: date: "Dec 26 2009", time: "12:34:56"
-    RTC.adjust(DateTime(__DATE__, __TIME__));
+    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
 }
 
