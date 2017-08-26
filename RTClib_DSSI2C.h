@@ -20,9 +20,10 @@ Add square wave output support: http://github.com/adafruit/RTClib/commit/65ae804
 Add NVRAM functions  http://github.com/adafruit/RTClib/commit/87624ede6728522d1457905754a6222ca54033b1
 
 */
-
-
 #include <Arduino.h> 
+
+#ifndef RTCLIB_DSSI2C_H
+#define RTCLIB_DSSI2C_H
 
 class TimeSpan;
 
@@ -96,3 +97,5 @@ public:
 protected:
     static long offset;
 };
+
+#endif // RTCLIB_DSSI2C_H
