@@ -202,14 +202,14 @@ uint8_t RTC_DS1307::begin(void) {
 
 uint8_t RTC_DS1307::isrunning(void) {
   
-  I2c.write(DS1307_ADDRESS, REG_ZERO);
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO)) { return 2; }
   
-  I2c.read(DS1307_ADDRESS, 1);
+  if(I2c.read(DS1307_ADDRESS, 1)) { return 2; }
   uint8_t ss = I2c.receive();
   return !(ss>>7);
 }
 
-void RTC_DS1307::adjust(const DateTime& dt) {
+uint8_t RTC_DS1307::adjust(const DateTime& dt) {
   uint8_t ary[8]; // array to hold data so it can be sent all at once by I2c.write()
   ary[0] = bin2bcd(dt.second()); 
   ary[1] = bin2bcd(dt.minute());
@@ -219,14 +219,15 @@ void RTC_DS1307::adjust(const DateTime& dt) {
   ary[5] = bin2bcd(dt.month());
   ary[6] = bin2bcd(dt.year() - 2000);
   ary[7] = REG_ZERO;
-  I2c.write(DS1307_ADDRESS, REG_ZERO, ary, 8);
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO, ary, 8)) { return 2; }
+  return 0;
 }
 
-DateTime RTC_DS1307::now() {
-
-  I2c.write(DS1307_ADDRESS, REG_ZERO);	
+uint8_t RTC_DS1307::now(DateTime& dt) {
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO)) { return 2; }
   
-  I2c.read(DS1307_ADDRESS, 7);
+  if(I2c.read(DS1307_ADDRESS, 7)) { return 2; }
+  if(I2c.available() != 7) { return 2; }
   uint8_t ss = bcd2bin(I2c.receive() & 0x7F);
   uint8_t mm = bcd2bin(I2c.receive());
   uint8_t hh = bcd2bin(I2c.receive());
@@ -235,7 +236,8 @@ DateTime RTC_DS1307::now() {
   uint8_t m =  bcd2bin(I2c.receive());
   uint16_t y = bcd2bin(I2c.receive()) + 2000;
 
-  return DateTime (y, m, d, hh, mm, ss);
+  dt = DateTime (y, m, d, hh, mm, ss);
+  return 0;
 }
 
 

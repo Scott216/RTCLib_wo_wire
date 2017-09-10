@@ -77,13 +77,17 @@ protected:
 };
 
 
-// RTC based on the DS1307 chip connected via I2C and the Wire library
+// RTC based on the DS1307 chip connected via I2C and the DSSI2C library
 class RTC_DS1307 {
 public:
   static uint8_t begin(void);
-    static void adjust(const DateTime& dt);
+    //Returns 0 if no errors occured or 2 if communication errors occured.
+    static uint8_t adjust(const DateTime& dt);
+	//Returns 0 if clock is halted, 1 if clock is running or 2 if communication
+	//errors occured.
     uint8_t isrunning(void);
-    static DateTime now();
+	//Returns 0 if no errors occured or 2 if communication errors occured.
+    static uint8_t now(DateTime& dt);
 };
 
 // RTC using the internal millis() clock, has to be initialized before use
