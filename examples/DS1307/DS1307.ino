@@ -37,7 +37,8 @@ void setup()
 }
 
 void loop () {
-    DateTime now = RTC.now();
+    DateTime now;
+	RTC.now(now);
     
     Serial.print(now.year(), DEC);
     Serial.print('/');
