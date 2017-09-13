@@ -25,6 +25,12 @@ Add NVRAM functions  http://github.com/adafruit/RTClib/commit/87624ede6728522d14
 #ifndef RTCLIB_DSSI2C_H
 #define RTCLIB_DSSI2C_H
 
+#define DS1307_ADDRESS  0x68
+#define SECONDS_PER_DAY 86400L
+
+#define SECONDS_FROM_1970_TO_2000 946684800
+#define REG_ZERO 0  // DS1307 register address 0
+
 class TimeSpan;
 
 class DateTime {
@@ -83,11 +89,14 @@ public:
   static uint8_t begin(void);
     //Returns 0 if no errors occured or 2 if communication errors occured.
     static uint8_t adjust(const DateTime& dt);
-	//Returns 0 if clock is halted, 1 if clock is running or 2 if communication
-	//errors occured.
+    //Returns 0 if clock is halted, 1 if clock is running or 2 if communication
+    //errors occured.
     uint8_t isrunning(void);
-	//Returns 0 if no errors occured or 2 if communication errors occured.
+    //Returns 0 if no errors occured or 2 if communication errors occured.
     static uint8_t now(DateTime& dt);
+protected:
+    static uint8_t bcd2bin (uint8_t val);
+    static uint8_t bin2bcd (uint8_t val);
 };
 
 // RTC using the internal millis() clock, has to be initialized before use
