@@ -8,12 +8,6 @@
 #include <I2C.h>  // http://dsscircuits.com/articles/arduino-i2c-master-library.html
 #include "RTClib_DSSI2C.h"  // Library for DS1307 RTC that doesn't use wire.h
 
-#define DS1307_ADDRESS  0x68
-#define SECONDS_PER_DAY 86400L
-
-#define SECONDS_FROM_1970_TO_2000 946684800
-#define REG_ZERO 0  // DS1307 register address 0
-
 const uint8_t daysInMonth [] PROGMEM = { 31,28,31,30,31,30,31,31,30,31,30,31 }; //has to be const or compiler compaints
 
 // number of days since 2000/01/01, valid for 2001..2099
@@ -192,24 +186,23 @@ TimeSpan TimeSpan::operator-(const TimeSpan& right) {
 ////////////////////////////////////////////////////////////////////////////////
 // RTC_DS1307 implementation
 
-static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
-static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
-
 uint8_t RTC_DS1307::begin(void) {
   return 1;
 }
 
+uint8_t RTC_DS1307::bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
+uint8_t RTC_DS1307::bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 
 uint8_t RTC_DS1307::isrunning(void) {
   
-  I2c.write(DS1307_ADDRESS, REG_ZERO);
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO)) return 2;
   
-  I2c.read(DS1307_ADDRESS, 1);
+  if(I2c.read(DS1307_ADDRESS, 1)) return 2;
   uint8_t ss = I2c.receive();
   return !(ss>>7);
 }
 
-void RTC_DS1307::adjust(const DateTime& dt) {
+uint8_t RTC_DS1307::adjust(const DateTime& dt) {
   uint8_t ary[8]; // array to hold data so it can be sent all at once by I2c.write()
   ary[0] = bin2bcd(dt.second()); 
   ary[1] = bin2bcd(dt.minute());
@@ -219,14 +212,15 @@ void RTC_DS1307::adjust(const DateTime& dt) {
   ary[5] = bin2bcd(dt.month());
   ary[6] = bin2bcd(dt.year() - 2000);
   ary[7] = REG_ZERO;
-  I2c.write(DS1307_ADDRESS, REG_ZERO, ary, 8);
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO, ary, 8)) return 2;
+  return 0;
 }
 
-DateTime RTC_DS1307::now() {
-
-  I2c.write(DS1307_ADDRESS, REG_ZERO);	
+uint8_t RTC_DS1307::now(DateTime& dt) {
+  if(I2c.write(DS1307_ADDRESS, REG_ZERO)) return 2;
   
-  I2c.read(DS1307_ADDRESS, 7);
+  if(I2c.read(DS1307_ADDRESS, 7)) return 2;
+  if(I2c.available() != 7) { return 2; }
   uint8_t ss = bcd2bin(I2c.receive() & 0x7F);
   uint8_t mm = bcd2bin(I2c.receive());
   uint8_t hh = bcd2bin(I2c.receive());
@@ -235,7 +229,8 @@ DateTime RTC_DS1307::now() {
   uint8_t m =  bcd2bin(I2c.receive());
   uint16_t y = bcd2bin(I2c.receive()) + 2000;
 
-  return DateTime (y, m, d, hh, mm, ss);
+  dt = DateTime (y, m, d, hh, mm, ss);
+  return 0;
 }
 
 
